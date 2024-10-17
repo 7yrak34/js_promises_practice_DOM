@@ -75,6 +75,7 @@ const thirdPromise = new Promise((resolve, reject) => {
     rightClicked = true;
 
     if (leftClicked && !resolved) {
+      resolved = true;
       resolve('Third promise was resolved');
     }
   });
