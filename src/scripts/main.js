@@ -19,7 +19,7 @@ async function handlePromise(promise) {
       'beforeend',
       `
       <div data-qa="notification" class="error">
-        ${errorMessage}
+        ${errorMessage.message}
       </div>
     `,
     );
@@ -27,25 +27,32 @@ async function handlePromise(promise) {
 }
 
 const firstPromise = new Promise((resolve, reject) => {
-  setTimeout(() => {
+  const handleClick = () => {
+    resolve('First promise was resolved');
+    document.documentElement.removeEventListener('click', handleClick);
+    clearTimeout(timerId);
+  };
+
+  const timerId = setTimeout(() => {
     reject(new Error('First promise was rejected'));
+    document.documentElement.removeEventListener('click', handleClick);
   }, 3000);
 
-  document.documentElement.addEventListener('click', () => {
-    resolve('First promise was resolved');
-  });
+  document.documentElement.addEventListener('click', handleClick);
 });
 
 handlePromise(firstPromise);
 
 const secondPromise = new Promise((resolve) => {
-  document.documentElement.addEventListener('click', () => {
+  const handleEvent = () => {
     resolve('Second promise was resolved');
-  });
 
-  document.documentElement.addEventListener('contextmenu', () => {
-    resolve('Second promise was resolved');
-  });
+    document.documentElement.removeEventListener('click', handleEvent);
+    document.documentElement.removeEventListener('contextmenu', handleEvent);
+  };
+
+  document.documentElement.addEventListener('click', handleEvent);
+  document.documentElement.addEventListener('contextmenu', handleEvent);
 });
 
 handlePromise(secondPromise);
@@ -53,11 +60,13 @@ handlePromise(secondPromise);
 const thirdPromise = new Promise((resolve, reject) => {
   let leftClicked = false;
   let rightClicked = false;
+  let resolved = false;
 
   document.documentElement.addEventListener('click', () => {
     leftClicked = true;
 
-    if (rightClicked) {
+    if (rightClicked && !resolved) {
+      resolved = true;
       resolve('Third promise was resolved');
     }
   });
@@ -65,7 +74,7 @@ const thirdPromise = new Promise((resolve, reject) => {
   document.documentElement.addEventListener('contextmenu', () => {
     rightClicked = true;
 
-    if (leftClicked) {
+    if (leftClicked && !resolved) {
       resolve('Third promise was resolved');
     }
   });
